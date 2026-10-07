@@ -1,354 +1,522 @@
-// Referencias
+// app.js
+import {
+  watchAuth,
+  logoutUser,
+  createTask,
+  getUserTasks,
+  updateTask,
+  deleteTask,
+  getProfile,
+  saveProfile,
+  fileToBase64,
+  changePassword,
+} from "./firebase.js";
 
+// Referencias
 const dateNumber = document.getElementById("dateNumber");
 const dateText = document.getElementById("dateText");
 const dateMonth = document.getElementById("dateMonth");
 const dateYear = document.getElementById("dateYear");
-
 const tasksContainer = document.getElementById("tasksContainer");
 const taskForm = document.getElementById("taskForm");
-
 const mainContent = document.getElementById("mainContent");
+const motivationalCard = document.getElementById("motivationalCard");
+const contextMenu = document.getElementById("contextMenu");
 
-const motivationalCard =
-  document.getElementById("motivationalCard");
+// Perfil
+const profileTrigger = document.getElementById("profileTrigger");
+const profileDropdown = document.getElementById("profileDropdown");
+const profileImg = document.getElementById("profileImg");
+const userNameEl = document.getElementById("userName");
+const userEmailEl = document.getElementById("userEmail");
 
-const contextMenu =
-  document.getElementById("contextMenu");
+// Modales
+const profileModal = document.getElementById("profileModal");
+const passwordModal = document.getElementById("passwordModal");
+const modalProfileImg = document.getElementById("modalProfileImg");
+const profileNameInput = document.getElementById("profileName");
+const profileEmailInput = document.getElementById("profileEmail");
+const profilePhotoInput = document.getElementById("profilePhotoInput");
+const profileError = document.getElementById("profileError");
+const currentPassInput = document.getElementById("currentPassword");
+const newPassInput = document.getElementById("newPassword");
+const confirmPassInput = document.getElementById("confirmPassword");
+const passwordError = document.getElementById("passwordError");
 
-const btnMinimize =
-  document.getElementById("btnMinimize");
-
+let currentUser = null;
 let selectedTask = null;
-
+let selectedPhotoFile = null;
 
 // ===== FECHA =====
 
 const setDate = () => {
-
   const date = new Date();
 
-  dateNumber.textContent =
-    date.toLocaleString("es", {
-      day: "numeric"
-    });
+  dateNumber.textContent = date.toLocaleString("es", {
+    day: "numeric",
+  });
 
-  dateText.textContent =
-    date.toLocaleString("es", {
-      weekday: "long"
-    });
+  dateText.textContent = date.toLocaleString("es", {
+    weekday: "long",
+  });
 
-  dateMonth.textContent =
-    date.toLocaleString("es", {
-      month: "short"
-    });
+  dateMonth.textContent = date.toLocaleString("es", {
+    month: "short",
+  });
 
-  dateYear.textContent =
-    date.toLocaleString("es", {
-      year: "numeric"
-    });
-
+  dateYear.textContent = date.toLocaleString("es", {
+    year: "numeric",
+  });
 };
 
+// ===== AUTH =====
 
-// ===== TARJETA MOTIVACIONAL =====
+watchAuth(async (user) => {
+  if (!user) {
+    window.location.href = "login.html";
+    return;
+  }
 
-const updateCardVisibility = () => {
+  currentUser = user;
 
-  const hasTasks =
-    tasksContainer.children.length > 0;
+  userEmailEl.textContent = user.email;
 
-  motivationalCard.classList.toggle(
-    "hidden",
-    hasTasks
-  );
+  let profile = await getProfile(user.uid);
 
+  // Si el usuario todavía no tiene perfil
+  if (!profile) {
+    await saveProfile(user.uid, {
+      name: user.email.split("@")[0],
+      email: user.email,
+      updatedAt: new Date().toISOString(),
+    });
+
+    profile = {
+      name: user.email.split("@")[0],
+      email: user.email,
+    };
+  }
+
+  // Mostrar nombre
+  userNameEl.textContent = profile.name;
+
+  // Avatar por defecto
+  profileImg.src = "aset/default-avatar.svg";
+  modalProfileImg.src = "aset/default-avatar.svg";
+
+  // Si el usuario tiene una foto guardada,
+  // utilizar esa foto
+  if (profile.photoURL) {
+    profileImg.src = profile.photoURL;
+    modalProfileImg.src = profile.photoURL;
+  }
+
+  await loadTasks(user.uid);
+});
+
+// ===== DROPDOWN PERFIL =====
+
+profileTrigger.addEventListener("click", (e) => {
+  e.stopPropagation();
+
+  profileDropdown.classList.toggle("visible");
+});
+
+document.addEventListener("click", () => {
+  profileDropdown.classList.remove("visible");
+});
+
+document.getElementById("btnMyProfile").addEventListener("click", () => {
+  profileDropdown.classList.remove("visible");
+
+  profileNameInput.value = userNameEl.textContent;
+
+  profileEmailInput.value = currentUser?.email || "";
+
+  profileError.textContent = "";
+
+  profileModal.classList.add("visible");
+});
+
+document.getElementById("btnChangePassword").addEventListener("click", () => {
+  profileDropdown.classList.remove("visible");
+
+  currentPassInput.value = "";
+  newPassInput.value = "";
+  confirmPassInput.value = "";
+
+  passwordError.textContent = "";
+
+  passwordModal.classList.add("visible");
+});
+
+document.getElementById("btnLogout").addEventListener("click", () => {
+  profileDropdown.classList.remove("visible");
+
+  logoutUser();
+});
+
+// ===== TOGGLE VISIBILIDAD DE CONTRASEÑA =====
+
+const setupPasswordToggle = (input, toggleBtn) => {
+  toggleBtn.addEventListener("click", () => {
+    const isHidden = input.type === "password";
+
+    input.type = isHidden ? "text" : "password";
+
+    toggleBtn.innerHTML = isHidden
+      ? '<iconify-icon icon="fluent:eye-off-20-regular"></iconify-icon>'
+      : '<iconify-icon icon="fluent:eye-20-regular"></iconify-icon>';
+  });
 };
 
+setupPasswordToggle(
+  currentPassInput,
+  document.getElementById("toggleCurrentPass"),
+);
 
-// ===== CREAR TAREA =====
+setupPasswordToggle(newPassInput, document.getElementById("toggleNewPass"));
 
-const createTaskElement = (text) => {
+setupPasswordToggle(
+  confirmPassInput,
+  document.getElementById("toggleConfirmPass"),
+);
 
-  const task =
-    document.createElement("div");
+// ===== MODALES =====
+
+document.querySelectorAll(".modal-close").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    document.getElementById(btn.dataset.close).classList.remove("visible");
+  });
+});
+
+document.querySelectorAll(".modal-overlay").forEach((overlay) => {
+  overlay.addEventListener("click", (e) => {
+    if (e.target === overlay) {
+      overlay.classList.remove("visible");
+    }
+  });
+});
+
+// ===== SELECCIONAR FOTO =====
+
+profilePhotoInput.addEventListener("change", (e) => {
+  selectedPhotoFile = e.target.files[0] || null;
+
+  if (selectedPhotoFile) {
+    const reader = new FileReader();
+
+    reader.onload = (ev) => {
+      // Vista previa en el modal
+      modalProfileImg.src = ev.target.result;
+
+      // Actualizar también el avatar del sidebar
+      profileImg.src = ev.target.result;
+    };
+
+    reader.readAsDataURL(selectedPhotoFile);
+  }
+});
+
+// ===== GUARDAR PERFIL =====
+
+document
+  .getElementById("btnSaveProfile")
+  .addEventListener("click", async () => {
+    if (!currentUser) return;
+
+    const name = profileNameInput.value.trim();
+
+    if (!name) {
+      profileError.textContent = "El nombre no puede estar vacío.";
+
+      return;
+    }
+
+    let photoURL = "";
+
+    // Si el usuario seleccionó una nueva foto
+    if (selectedPhotoFile) {
+      photoURL = await fileToBase64(selectedPhotoFile);
+    }
+
+    // Obtener perfil actual
+    const existing = await getProfile(currentUser.uid);
+
+    const data = {
+      name,
+      email: currentUser.email,
+      updatedAt: new Date().toISOString(),
+    };
+
+    // Nueva foto
+    if (photoURL) {
+      data.photoURL = photoURL;
+    }
+
+    // Mantener foto anterior si no seleccionó una nueva
+    else if (existing?.photoURL) {
+      data.photoURL = existing.photoURL;
+    }
+
+    await saveProfile(currentUser.uid, data);
+
+    // Actualizar nombre
+    userNameEl.textContent = name;
+
+    // Actualizar foto inmediatamente
+    if (data.photoURL) {
+      profileImg.src = data.photoURL;
+      modalProfileImg.src = data.photoURL;
+    } else {
+      profileImg.src = "aset/default-avatar.svg";
+      modalProfileImg.src = "aset/default-avatar.svg";
+    }
+
+    profileModal.classList.remove("visible");
+
+    selectedPhotoFile = null;
+
+    // Limpiar input
+    profilePhotoInput.value = "";
+  });
+
+// ===== CAMBIAR CONTRASEÑA =====
+
+document
+  .getElementById("btnSavePassword")
+  .addEventListener("click", async () => {
+    const current = currentPassInput.value;
+    const newPass = newPassInput.value;
+    const confirm = confirmPassInput.value;
+
+    if (!current || !newPass || !confirm) {
+      passwordError.textContent = "Completa todos los campos.";
+
+      return;
+    }
+
+    if (newPass.length < 6) {
+      passwordError.textContent =
+        "La nueva contraseña debe tener al menos 6 caracteres.";
+
+      return;
+    }
+
+    if (newPass !== confirm) {
+      passwordError.textContent = "Las contraseñas no coinciden.";
+
+      return;
+    }
+
+    try {
+      await changePassword(currentUser, current, newPass);
+
+      passwordError.textContent = "";
+
+      passwordModal.classList.remove("visible");
+    } catch (err) {
+      passwordError.textContent = translateAuthError(err.code);
+    }
+  });
+
+// ===== TAREAS =====
+
+const loadTasks = async (uid) => {
+  const tasks = await getUserTasks(uid);
+
+  tasksContainer.innerHTML = "";
+
+  tasks.forEach((task) => {
+    const el = createTaskElement(task.text, task.done, task.important);
+
+    el.dataset.id = task.id;
+
+    tasksContainer.appendChild(el);
+  });
+
+  updateCardVisibility();
+};
+
+const createTaskElement = (text, done = false, important = false) => {
+  const task = document.createElement("div");
 
   task.classList.add("task");
 
+  if (done) {
+    task.classList.add("done");
+  }
+
+  if (important) {
+    task.classList.add("important");
+  }
 
   task.innerHTML = `
-
     <div class="task-check">
-
-      <iconify-icon
-        icon="fluent:checkmark-20-filled">
-      </iconify-icon>
-
+      <iconify-icon icon="fluent:checkmark-20-filled"></iconify-icon>
     </div>
 
-    <span class="task-text">
-      ${text}
-    </span>
+    <span class="task-text">${text}</span>
 
     <iconify-icon
       class="task-star"
-      icon="fluent:star-20-regular">
-    </iconify-icon>
-
+      icon="fluent:star-20-regular"
+    ></iconify-icon>
   `;
 
+  task.querySelector(".task-check").addEventListener("click", async (e) => {
+    e.stopPropagation();
 
-  // Completar tarea
+    const isDone = task.classList.toggle("done");
 
-  task
-    .querySelector(".task-check")
-    .addEventListener("click", (e) => {
-
-      e.stopPropagation();
-
-      task.classList.toggle("done");
-
-      renderOrderedTasks();
-
+    await updateTask(task.dataset.id, {
+      done: isDone,
     });
 
+    renderOrderedTasks();
+  });
 
-  // Marcar como importante
+  task.querySelector(".task-star").addEventListener("click", async (e) => {
+    e.stopPropagation();
 
-  task
-    .querySelector(".task-star")
-    .addEventListener("click", (e) => {
+    const isImportant = task.classList.toggle("important");
 
-      e.stopPropagation();
-
-      task.classList.toggle("important");
-
+    await updateTask(task.dataset.id, {
+      important: isImportant,
     });
+  });
 
+  task.addEventListener("contextmenu", (e) => {
+    e.preventDefault();
 
-  // Menú contextual
+    selectedTask = task;
 
-  task.addEventListener(
-    "contextmenu",
-    (e) => {
-
-      e.preventDefault();
-
-      selectedTask = task;
-
-      showContextMenu(
-        e.pageX,
-        e.pageY
-      );
-
-    }
-  );
-
+    showContextMenu(e.pageX, e.pageY);
+  });
 
   return task;
-
 };
 
-
-// ===== AGREGAR TAREA =====
-
-const addNewTask = (event) => {
-
+const addNewTask = async (event) => {
   event.preventDefault();
 
-  const input =
-    event.target.tasktext;
+  const input = event.target.tasktext;
 
-  const value =
-    input.value.trim();
+  const value = input.value.trim();
 
+  if (!value || !currentUser) return;
 
-  if (!value) return;
+  await createTask(currentUser.uid, value);
 
+  input.value = "";
 
-  const task =
-    createTaskElement(value);
-
-
-  tasksContainer.prepend(task);
-
-  event.target.reset();
-
-  updateCardVisibility();
-
+  await loadTasks(currentUser.uid);
 };
 
-
-// ===== ORDENAR TAREAS =====
+// ===== ORDENAR =====
 
 const order = () => {
-
   const done = [];
-
   const toDo = [];
 
+  Array.from(tasksContainer.children).forEach((el) => {
+    el.classList.contains("done") ? done.push(el) : toDo.push(el);
+  });
 
-  Array
-    .from(tasksContainer.children)
-    .forEach((el) => {
-
-      el.classList.contains("done")
-        ? done.push(el)
-        : toDo.push(el);
-
-    });
-
-
-  return [
-    ...toDo,
-    ...done
-  ];
-
+  return [...toDo, ...done];
 };
-
 
 const renderOrderedTasks = () => {
-
-  order().forEach(
-    (el) =>
-      tasksContainer.appendChild(el)
-  );
-
+  order().forEach((el) => {
+    tasksContainer.appendChild(el);
+  });
 };
 
+const updateCardVisibility = () => {
+  motivationalCard.classList.toggle(
+    "hidden",
+    tasksContainer.children.length > 0,
+  );
+};
 
-// ===== MENÚ CONTEXTUAL =====
+// ===== CONTEXT MENU =====
 
 const showContextMenu = (x, y) => {
+  contextMenu.style.left = x + "px";
 
-  contextMenu.style.left =
-    x + "px";
+  contextMenu.style.top = y + "px";
 
-  contextMenu.style.top =
-    y + "px";
-
-  contextMenu.classList.add(
-    "visible"
-  );
-
+  contextMenu.classList.add("visible");
 };
-
 
 const hideContextMenu = () => {
-
-  contextMenu.classList.remove(
-    "visible"
-  );
+  contextMenu.classList.remove("visible");
 
   selectedTask = null;
-
 };
 
+contextMenu.addEventListener("click", async (e) => {
+  const item = e.target.closest(".context-item");
 
-// Acciones del menú contextual
+  if (!item || !selectedTask) return;
 
-contextMenu.addEventListener(
-  "click",
-  (e) => {
+  const action = item.dataset.action;
 
-    const item =
-      e.target.closest(
-        ".context-item"
-      );
+  const id = selectedTask.dataset.id;
 
+  if (action === "complete") {
+    const isDone = selectedTask.classList.toggle("done");
 
-    if (!item || !selectedTask)
-      return;
+    await updateTask(id, {
+      done: isDone,
+    });
 
+    renderOrderedTasks();
+  } else if (action === "important") {
+    const isImportant = selectedTask.classList.toggle("important");
 
-    const action =
-      item.dataset.action;
+    await updateTask(id, {
+      important: isImportant,
+    });
+  } else if (action === "delete") {
+    selectedTask.remove();
 
+    await deleteTask(id);
 
-    if (action === "complete") {
+    updateCardVisibility();
+  }
 
-      selectedTask.classList.toggle(
-        "done"
-      );
+  hideContextMenu();
+});
 
-      renderOrderedTasks();
-
-    }
-
-
-    else if (action === "important") {
-
-      selectedTask.classList.toggle(
-        "important"
-      );
-
-    }
-
-
-    else if (action === "delete") {
-
-      selectedTask.remove();
-
-      updateCardVisibility();
-
-    }
-
-
+document.addEventListener("click", (e) => {
+  if (!contextMenu.contains(e.target)) {
     hideContextMenu();
-
   }
-);
+});
 
+// ===== MINIMIZAR / EXPANDIR =====
 
-// Cerrar menú contextual
+document.getElementById("btnMinimize").addEventListener("click", () => {
+  document.body.classList.toggle("expanded");
+});
 
-document.addEventListener(
-  "click",
-  (e) => {
+// ===== HELPERS =====
 
-    if (!contextMenu.contains(e.target)) {
+function translateAuthError(code) {
+  const map = {
+    "auth/wrong-password": "Contraseña actual incorrecta.",
 
-      hideContextMenu();
+    "auth/invalid-credential": "Credenciales inválidas.",
 
-    }
+    "auth/too-many-requests": "Demasiados intentos.",
+  };
 
-  }
-);
+  return map[code] || "Ocurrió un error.";
+}
 
-
-document.addEventListener(
-  "contextmenu",
-  (e) => {
-
-    if (!e.target.closest(".task")) {
-
-      hideContextMenu();
-
-    }
-
-  }
-);
-
-
-// ===== EXPANDIR / RESTAURAR =====
-
-btnMinimize.addEventListener(
-  "click",
-  () => {
-
-    document.body.classList.toggle(
-      "expanded"
-    );
-
-  }
-);
-
-
-// ===== INICIALIZAR =====
+// ===== INIT =====
 
 setDate();
 
-taskForm.addEventListener(
-  "submit",
-  addNewTask
-);
+taskForm.addEventListener("submit", addNewTask);

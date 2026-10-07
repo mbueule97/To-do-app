@@ -1,320 +1,412 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
     <title>Lista de Tareas</title>
 
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css" />
 
-    <!-- Iconify -->
     <script src="https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js"></script>
 
-    <!-- JavaScript -->
-    <script src="app.js" defer></script>
-</head>
+    <script type="module" src="app.js"></script>
+  </head>
 
-<body>
+  <body>
+    <!-- =========================
+         SIDEBAR
+    ========================== -->
 
-    <!-- Sidebar -->
     <aside class="sidebar">
+      <!-- Perfil del usuario -->
+      <header class="sidebar-header">
+        <div class="image-text" id="profileTrigger">
+          <img
+            src="aset/default-avatar.svg"
+            alt="Foto de perfil"
+            id="profileImg"
+          />
 
-        <header class="sidebar-header">
+          <div class="header-text">
+            <span class="name" id="userName"> Cargando... </span>
 
-            <div class="image-text">
-
-                <img src="aset/profil.png" alt="perfil">
-
-                <div class="header-text">
-                    <span class="name">Miguel Angel Nat</span>
-                    <span class="email">miguel.nat@gmail.com</span>
-                </div>
-
-            </div>
-
-        </header>
-
-        <!-- Buscador -->
-        <div class="search-bar">
-
-            <iconify-icon
-                icon="fluent:search-20-regular"
-                class="search-icon">
-            </iconify-icon>
-
-            <input
-                type="text"
-                placeholder="Buscar"
-                autocomplete="off">
-
+            <span class="email" id="userEmail"></span>
+          </div>
         </div>
 
-        <!-- Navegación -->
-        <nav class="nav">
+        <!-- Menú desplegable de perfil -->
 
-            <a href="#" class="nav-item active">
+        <div class="profile-dropdown" id="profileDropdown">
+          <div class="profile-dropdown-item" id="btnMyProfile">
+            <iconify-icon icon="fluent:person-20-regular"></iconify-icon>
 
-                <iconify-icon icon="fluent:sun-20-regular"></iconify-icon>
+            <span>Mi perfil</span>
+          </div>
 
-                <span>Mi día</span>
+          <div class="profile-dropdown-item" id="btnChangePassword">
+            <iconify-icon icon="fluent:lock-20-regular"></iconify-icon>
 
-            </a>
+            <span>Cambiar contraseña</span>
+          </div>
 
-            <a href="#" class="nav-item">
+          <div class="profile-dropdown-item" id="btnLogout">
+            <iconify-icon icon="fluent:sign-out-20-regular"></iconify-icon>
 
-                <iconify-icon icon="fluent:leaf-20-regular"></iconify-icon>
-
-                <span>Planeado</span>
-
-            </a>
-
-            <a href="#" class="nav-item">
-
-                <iconify-icon icon="fluent:person-20-regular"></iconify-icon>
-
-                <span>Asignadas a mí</span>
-
-            </a>
-
-            <a href="#" class="nav-item">
-
-                <iconify-icon icon="fluent:flag-20-regular"></iconify-icon>
-
-                <span>Correo marcado</span>
-
-            </a>
-
-            <a href="#" class="nav-item">
-
-                <iconify-icon icon="fluent:home-20-regular"></iconify-icon>
-
-                <span>Tareas</span>
-
-            </a>
-
-        </nav>
-
-        <!-- Listas -->
-        <div class="sidebar-lists"></div>
-
-        <!-- Footer -->
-        <div class="sidebar-footer">
-
-            <button class="footer-btn" id="btnNewList">
-
-                <iconify-icon
-                    icon="fluent:page-add-20-regular">
-                </iconify-icon>
-
-                <span>Nueva lista</span>
-
-            </button>
-
-            <button class="footer-btn" id="btnNewGroup">
-
-                <iconify-icon
-                    icon="fluent:group-20-regular">
-                </iconify-icon>
-
-                <span>Nuevo grupo</span>
-
-            </button>
-
+            <span>Cerrar sesión</span>
+          </div>
         </div>
+      </header>
 
+      <!-- =========================
+           BUSCADOR
+      ========================== -->
+
+      <div class="search-bar">
+        <iconify-icon
+          icon="fluent:search-20-regular"
+          class="search-icon"
+        ></iconify-icon>
+
+        <input type="text" placeholder="Buscar" autocomplete="off" />
+      </div>
+
+      <!-- =========================
+           NAVEGACIÓN
+      ========================== -->
+
+      <nav class="nav">
+        <a href="#" class="nav-item active">
+          <iconify-icon icon="fluent:sun-20-regular"></iconify-icon>
+
+          <span>Mi día</span>
+        </a>
+
+        <a href="#" class="nav-item">
+          <iconify-icon icon="fluent:leaf-20-regular"></iconify-icon>
+
+          <span>Planeado</span>
+        </a>
+
+        <a href="#" class="nav-item">
+          <iconify-icon icon="fluent:person-20-regular"></iconify-icon>
+
+          <span>Asignadas a mí</span>
+        </a>
+
+        <a href="#" class="nav-item">
+          <iconify-icon icon="fluent:flag-20-regular"></iconify-icon>
+
+          <span>Correo marcado</span>
+        </a>
+
+        <a href="#" class="nav-item">
+          <iconify-icon icon="fluent:home-20-regular"></iconify-icon>
+
+          <span>Tareas</span>
+        </a>
+      </nav>
+
+      <!-- =========================
+           LISTAS
+      ========================== -->
+
+      <div class="sidebar-lists"></div>
+
+      <!-- =========================
+           FOOTER SIDEBAR
+      ========================== -->
+
+      <div class="sidebar-footer">
+        <button class="footer-btn" id="btnNewList">
+          <iconify-icon icon="fluent:page-add-20-regular"></iconify-icon>
+
+          <span>Nueva lista</span>
+        </button>
+
+        <button class="footer-btn" id="btnNewGroup">
+          <iconify-icon icon="fluent:group-20-regular"></iconify-icon>
+
+          <span>Nuevo grupo</span>
+        </button>
+      </div>
     </aside>
 
+    <!-- =========================
+         MAIN
+    ========================== -->
 
-    <!-- Main -->
     <main class="main" id="mainContent">
+      <!-- Barra superior -->
 
-        <!-- Barra superior -->
-        <div class="top-bar">
-
-            <div class="top-bar-left">
-
-                <!-- Expandir / Restaurar -->
-                <button
-                    class="icon-btn"
-                    id="btnMinimize"
-                    title="Expandir">
-
-                    <iconify-icon
-                        icon="fluent:resize-small-20-regular">
-                    </iconify-icon>
-
-                </button>
-
-            </div>
-
-
-            <div class="top-bar-right">
-
-                <!-- Sugerencias -->
-                <button
-                    class="icon-btn"
-                    id="btnSuggestions"
-                    title="Sugerencias">
-
-                    <iconify-icon
-                        icon="fluent:lightbulb-20-regular">
-                    </iconify-icon>
-
-                </button>
-
-
-                <!-- Menú -->
-                <button
-                    class="icon-btn"
-                    id="btnMenu"
-                    title="Menú">
-
-                    <iconify-icon
-                        icon="fluent:more-horizontal-20-regular">
-                    </iconify-icon>
-
-                </button>
-
-            </div>
-
+      <div class="top-bar">
+        <div class="top-bar-left">
+          <button class="icon-btn" id="btnMinimize" title="Expandir">
+            <iconify-icon icon="fluent:resize-small-20-regular"></iconify-icon>
+          </button>
         </div>
 
+        <div class="top-bar-right">
+          <button class="icon-btn" id="btnSuggestions" title="Sugerencias">
+            <iconify-icon icon="fluent:lightbulb-20-regular"></iconify-icon>
+          </button>
 
-        <!-- Contenido -->
-        <div class="content">
+          <button class="icon-btn" id="btnMenu" title="Menú">
+            <iconify-icon
+              icon="fluent:more-horizontal-20-regular"
+            ></iconify-icon>
+          </button>
+        </div>
+      </div>
 
-            <!-- Fecha -->
-            <div class="date-header">
+      <!-- =========================
+           CONTENIDO PRINCIPAL
+      ========================== -->
 
-                <div
-                    class="date-number"
-                    id="dateNumber">
-                </div>
+      <div class="content">
+        <!-- Fecha -->
 
-                <div class="date-info">
+        <div class="date-header">
+          <div class="date-number" id="dateNumber"></div>
 
-                    <span id="dateText"></span>
+          <div class="date-info">
+            <span id="dateText"></span>
 
-                    <span id="dateMonth"></span>
+            <span id="dateMonth"></span>
 
-                    <span id="dateYear"></span>
-
-                </div>
-
-            </div>
-
-
-            <!-- Tarjeta motivacional -->
-            <div
-                class="motivational-card"
-                id="motivationalCard">
-
-                <div class="card-icon">
-
-                    <iconify-icon
-                        icon="fluent:calendar-48-regular">
-                    </iconify-icon>
-
-                </div>
-
-                <h2 class="card-title">
-                    Hoy es tu día para brillar
-                </h2>
-
-                <p class="card-message">
-                    Cada tarea que completas te acerca a la persona
-                    que estás construyendo. Un paso a la vez,
-                    sin prisa, sin excusas.
-                </p>
-
-            </div>
-
-
-            <!-- Lista de tareas -->
-            <div
-                class="tasks"
-                id="tasksContainer">
-            </div>
-
-
-            <!-- Agregar tarea -->
-            <div class="add-task">
-
-                <form id="taskForm">
-
-                    <iconify-icon
-                        icon="fluent:add-20-regular"
-                        class="add-icon">
-                    </iconify-icon>
-
-                    <input
-                        type="text"
-                        name="tasktext"
-                        placeholder="Agregar una tarea"
-                        autocomplete="off">
-
-                </form>
-
-            </div>
-
+            <span id="dateYear"></span>
+          </div>
         </div>
 
+        <!-- =========================
+             TARJETA MOTIVACIONAL
+        ========================== -->
+
+        <div class="motivational-card" id="motivationalCard">
+          <div class="card-icon">
+            <iconify-icon icon="fluent:calendar-48-regular"></iconify-icon>
+          </div>
+
+          <h2 class="card-title">Hoy es tu día para brillar</h2>
+
+          <p class="card-message">
+            Cada tarea que completas te acerca a la persona que estás
+            construyendo. Un paso a la vez, sin prisa, sin excusas.
+          </p>
+        </div>
+
+        <!-- =========================
+             TAREAS
+        ========================== -->
+
+        <div class="tasks" id="tasksContainer"></div>
+
+        <!-- =========================
+             AGREGAR TAREA
+        ========================== -->
+
+        <div class="add-task">
+          <form id="taskForm">
+            <iconify-icon
+              icon="fluent:add-20-regular"
+              class="add-icon"
+            ></iconify-icon>
+
+            <input
+              type="text"
+              name="tasktext"
+              placeholder="Agregar una tarea"
+              autocomplete="off"
+            />
+          </form>
+        </div>
+      </div>
     </main>
 
+    <!-- =========================
+         MENÚ CONTEXTUAL
+    ========================== -->
 
-    <!-- Menú contextual -->
-    <div
-        class="context-menu"
-        id="contextMenu">
+    <div class="context-menu" id="contextMenu">
+      <div class="context-item" data-action="complete">
+        <iconify-icon icon="fluent:checkmark-circle-20-regular"></iconify-icon>
 
-        <div
-            class="context-item"
-            data-action="complete">
+        <span>Marcar como completada</span>
+      </div>
 
-            <iconify-icon
-                icon="fluent:checkmark-circle-20-regular">
-            </iconify-icon>
+      <div class="context-item" data-action="important">
+        <iconify-icon icon="fluent:star-20-filled"></iconify-icon>
 
-            <span>
-                Marcar como completada
-            </span>
+        <span>Marcar como importante</span>
+      </div>
 
-        </div>
+      <div class="context-item" data-action="delete">
+        <iconify-icon icon="fluent:delete-20-regular"></iconify-icon>
 
-
-        <div
-            class="context-item"
-            data-action="important">
-
-            <iconify-icon
-                icon="fluent:star-20-filled">
-            </iconify-icon>
-
-            <span>
-                Marcar como importante
-            </span>
-
-        </div>
-
-
-        <div
-            class="context-item"
-            data-action="delete">
-
-            <iconify-icon
-                icon="fluent:delete-20-regular">
-            </iconify-icon>
-
-            <span>
-                Eliminar
-            </span>
-
-        </div>
-
+        <span>Eliminar</span>
+      </div>
     </div>
 
-</body>
+    <!-- =========================
+         MODAL: MI PERFIL
+    ========================== -->
 
+    <div class="modal-overlay" id="profileModal">
+      <div class="modal">
+        <!-- Header -->
+
+        <div class="modal-header">
+          <h3>Mi perfil</h3>
+
+          <button class="modal-close" data-close="profileModal">
+            <iconify-icon icon="fluent:close-20-regular"></iconify-icon>
+          </button>
+        </div>
+
+        <!-- Body -->
+
+        <div class="modal-body">
+          <!-- =========================
+               FOTO DE PERFIL
+          ========================== -->
+
+          <div class="profile-photo-section">
+            <img
+              src="aset/default-avatar.svg"
+              alt="Foto de perfil"
+              id="modalProfileImg"
+              class="modal-avatar"
+            />
+
+            <label class="btn-upload">
+              Cambiar foto
+
+              <input
+                type="file"
+                id="profilePhotoInput"
+                accept="image/*"
+                hidden
+              />
+            </label>
+          </div>
+
+          <!-- =========================
+               NOMBRE
+          ========================== -->
+
+          <label for="profileName"> Nombre </label>
+
+          <input type="text" id="profileName" placeholder="Tu nombre" />
+
+          <!-- =========================
+               CORREO
+          ========================== -->
+
+          <label for="profileEmail"> Correo </label>
+
+          <input type="email" id="profileEmail" readonly />
+
+          <!-- Error -->
+
+          <div class="modal-error" id="profileError"></div>
+
+          <!-- Guardar -->
+
+          <button class="auth-btn" id="btnSaveProfile">Guardar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- =========================
+         MODAL: CAMBIAR CONTRASEÑA
+    ========================== -->
+
+    <div class="modal-overlay" id="passwordModal">
+      <div class="modal">
+        <!-- Header -->
+
+        <div class="modal-header">
+          <h3>Cambiar contraseña</h3>
+
+          <button class="modal-close" data-close="passwordModal">
+            <iconify-icon icon="fluent:close-20-regular"></iconify-icon>
+          </button>
+        </div>
+
+        <!-- Body -->
+
+        <div class="modal-body">
+          <!-- Contraseña actual -->
+
+          <label for="currentPassword"> Contraseña actual </label>
+
+          <div class="input-password">
+            <input
+              type="password"
+              id="currentPassword"
+              placeholder="••••••••"
+              autocomplete="current-password"
+            />
+
+            <button
+              type="button"
+              class="toggle-password"
+              id="toggleCurrentPass"
+            >
+              <iconify-icon icon="fluent:eye-20-regular"></iconify-icon>
+            </button>
+          </div>
+
+          <!-- Nueva contraseña -->
+
+          <label for="newPassword"> Nueva contraseña </label>
+
+          <div class="input-password">
+            <input
+              type="password"
+              id="newPassword"
+              placeholder="Mínimo 6 caracteres"
+              minlength="6"
+              autocomplete="new-password"
+            />
+
+            <button type="button" class="toggle-password" id="toggleNewPass">
+              <iconify-icon icon="fluent:eye-20-regular"></iconify-icon>
+            </button>
+          </div>
+
+          <!-- Confirmar contraseña -->
+
+          <label for="confirmPassword"> Confirmar nueva contraseña </label>
+
+          <div class="input-password">
+            <input
+              type="password"
+              id="confirmPassword"
+              placeholder="••••••••"
+              autocomplete="new-password"
+            />
+
+            <button
+              type="button"
+              class="toggle-password"
+              id="toggleConfirmPass"
+            >
+              <iconify-icon icon="fluent:eye-20-regular"></iconify-icon>
+            </button>
+          </div>
+
+          <!-- Error -->
+
+          <div class="modal-error" id="passwordError"></div>
+
+          <!-- Guardar contraseña -->
+
+          <button class="auth-btn" id="btnSavePassword">
+            Cambiar contraseña
+          </button>
+        </div>
+      </div>
+    </div>
+  </body>
 </html>
